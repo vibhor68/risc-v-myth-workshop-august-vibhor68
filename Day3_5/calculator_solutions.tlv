@@ -40,7 +40,7 @@
                        $quot[31:0];
          // =========================================
          // Counter
-         $cnt = $reset ? 0 : 1 + >>1$cnt;
+         $cnt[31:0] = $reset ? 0 : 1 + >>1$cnt[31:0];
          // =========================================  
                              
       // Macro instantiations for calculator visualization(disabled by default).
