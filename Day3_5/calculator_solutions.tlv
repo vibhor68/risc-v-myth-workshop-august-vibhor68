@@ -1,10 +1,5 @@
 \m4_TLV_version 1d: tl-x.org
 \SV
-//Calculator labs solutions here
-
-
-\m4_TLV_version 1d: tl-x.org
-\SV
    // This code can be found in: https://github.com/stevehoover/RISC-V_MYTH_Workshop
    
    m4_include_lib(['https://raw.githubusercontent.com/stevehoover/RISC-V_MYTH_Workshop/bd1f186fde018ff9e3fd80597b7397a1c862cf15/tlv_lib/calculator_shell_lib.tlv'])
@@ -20,7 +15,7 @@
          
          // YOUR CODE HERE
          // ...
-         $val1[31:0] = $rand1[3:0];
+         $val1[31:0] = >>1$out[31:0];
          $val2[31:0] = $rand2[3:0];
          $sum[31:0]  = $val1[31:0] + $val2[31:0];
          $diff[31:0] = $val1[31:0] - $val2[31:0];
@@ -28,6 +23,8 @@
          $quot[31:0] = $val1[31:0] % $val2[31:0];
       
          $out[31:0] =
+                $reset
+                     ? 0 : 
                 $op[0]
                      ? $sum[31:0] :
                 $op[1]
