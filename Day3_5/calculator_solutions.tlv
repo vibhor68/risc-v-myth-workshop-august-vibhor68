@@ -12,7 +12,6 @@
       @0
          $reset = *reset;
          
-         
          // YOUR CODE HERE
          // ...
       @1 
@@ -27,28 +26,37 @@
             $quot[31:0] = $val1[31:0] % $val2[31:0];
       @2  
          ?$valid_or_reset
-            $out[31:0] =
-                    $reset
+            $mem[31:0] =
+                  $reset
                         ? 0 :
-                      $op[0]
+                      ($op[2:0]==3'b101)
+                        ? >>2$mem[31:0] :
+                         $val1[31:0];
+             //?$valid_or_reset
+            $out[31:0] =
+                  $reset
+                        ? 0 :
+                      ($op[2:0]==3'b000)
                         ? $sum[31:0] :
-                      $op[1]
+                      ($op[2:0]==3'b001)
                         ? $diff[31:0] :
-                      $op[2]
+                      ($op[2:0]==3'b010)
                         ? $prod[31:0]:
-                        //default
-                             $quot[31:0];
-
-      // Macro instantiations for calculator visualization(disabled by default).
-      // Uncomment to enable visualisation, and also,
-      // NOTE: If visualization is enabled, $op must be defined to the proper width using the expression below.
-      //       (Any signals other than $rand1, $rand2 that are not explicitly assigned will result in strange errors.)
-      //       You can, however, safely use these specific random signals as described in the videos:
-      //  o $rand1[3:0]
-      //  o $rand2[3:0]
-      //  o $op[x:0]
+                      ($op[2:0]==3'b011)
+                        ? $quot[31:0]:
+                      ($op[2:0]==3'b100)
+                        ? >>2$mem[31:0]:
+                        >>2$out;
+            // Macro instantiations for calculator visualization(disabled by default).
+            // Uncomment to enable visualisation, and also,
+            // NOTE: If visualization is enabled, $op must be defined to the proper width using the expression below.
+            //       (Any signals other than $rand1, $rand2 that are not explicitly assigned will result in strange errors.)
+            //       You can, however, safely use these specific random signals as described in the videos:
+            //$rand1[3:0]
+            //$rand2[3:0]
+            //$op[x:0]
       
-   //m4+cal_viz(@3) // Arg: Pipeline stage represented by viz, should be atleast equal to last stage of CALCULATOR logic.
+   //m4+cal_viz(@2) // Arg: Pipeline stage represented by viz, should be atleast equal to last stage of CALCULATOR logic.
 
    
    // Assert these to end simulation (before Makerchip cycle limit).
