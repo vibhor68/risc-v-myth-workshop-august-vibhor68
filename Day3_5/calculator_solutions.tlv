@@ -16,30 +16,28 @@
          // YOUR CODE HERE
          // ...
       @1 
+         $valid = $reset ? 0 : 1 + >>1$valid;
+         $valid_or_reset = $reset || $valid;
          $val1[31:0] = >>2$out[31:0];
          $val2[31:0] = $rand2[3:0];
-         $sum[31:0]  = $val1[31:0] + $val2[31:0];
-         $diff[31:0] = $val1[31:0] - $val2[31:0];
-         $prod[31:0] = $val1[31:0] * $val2[31:0];
-         $quot[31:0] = $val1[31:0] % $val2[31:0];
-         // =========================================
-         // Counter
-         $valid = $reset ? 0 : 1 + >>1$valid;
-         //$valid = $cnt;
-         // =========================================  
-      @2   
-         //$valid = ~$cnt;
-         $out[31:0] =
-                 ($reset || !$valid)
-                     ? 0 :
-                   $op[0]
-                     ? $sum[31:0] :
-                   $op[1]
-                     ? $diff[31:0] :
-                   $op[2]
-                     ? $prod[31:0]:
-                     //default
-                       $quot[31:0];
+         ?$valid_or_reset
+            $sum[31:0]  = $val1[31:0] + $val2[31:0];
+            $diff[31:0] = $val1[31:0] - $val2[31:0];
+            $prod[31:0] = $val1[31:0] * $val2[31:0];
+            $quot[31:0] = $val1[31:0] % $val2[31:0];
+      @2  
+         ?$valid_or_reset
+            $out[31:0] =
+                    $reset
+                        ? 0 :
+                      $op[0]
+                        ? $sum[31:0] :
+                      $op[1]
+                        ? $diff[31:0] :
+                      $op[2]
+                        ? $prod[31:0]:
+                        //default
+                             $quot[31:0];
 
       // Macro instantiations for calculator visualization(disabled by default).
       // Uncomment to enable visualisation, and also,
