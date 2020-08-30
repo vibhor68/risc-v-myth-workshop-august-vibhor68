@@ -115,9 +115,13 @@
          
          //Register File read(part2)
          $src1_value[31:0] = $rf_rd_data1;
-         $src2_value[31:0] = $rf_rd_data1;
+         $src2_value[31:0] = $rf_rd_data2;
          
-         
+         //ALU
+         $result[31:0] =
+               $is_addi ? $src1_value + $imm :
+               $is_add  ? $src1_value + $src2_value :
+                         32'bx;
          
          
          // Note: Because of the magic we are using for visualisation, if visualisation is enabled below,
