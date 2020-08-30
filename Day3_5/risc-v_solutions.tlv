@@ -68,10 +68,10 @@
                       $is_s_instr ? { {21{$instr[31]}}, $instr[30:25],$instr[11:7]}:
                       $is_b_instr ? { {20{$instr[31]}},$instr[7],$instr[30:25],$instr[11:8],1'b0}:
                       $is_u_instr ? {$instr[31],$instr[30:20], $instr[19:12],{12{1'b0}}}:
-                      $is_u_instr ? { {12{$instr[31]}},$instr[19:12],$instr[20],$instr[30:25],$instr[24:21],1'b0}:
+                      $is_j_instr ? { {12{$instr[31]}},$instr[19:12],$instr[20],$instr[30:25],$instr[24:21],1'b0}:
                                     32'b0;
          //Instruction Decode
-         //$rs1[4:0] = $instr[19:15];
+         //$rs1[4:0] = $instr[19:15]; Commented because of multiple assignment warning
          //$rs2[4:0] = $instr[24:20];
          //$rd[4:0] = $instr[11:7];
          $opcode[6:0] = $instr[6:0];
@@ -106,7 +106,6 @@
          $is_addi = $dec_bits ==? 11'bx_000_0010011;
          $is_add = $dec_bits ==? 11'b0_000_0110011;
          
-         
          `BOGUS_USE($is_beq $is_bne $is_blt $is_bge $is_bltu $is_bgeu $is_addi $is_add)
          
          //Register File read
@@ -124,22 +123,22 @@
                $is_addi ? $src1_value + $imm :
                $is_add  ? $src1_value + $src2_value :
                          32'bx;
+         
          //Register File Write
-         //$rf_wr_en = $rd_valid;
          $rf_wr_en = ($rd == 5'b0) ? 0 : $rd_valid; // logic to disable write if $rd is 0 
          ?$rd_valid
             $rf_wr_index[4:0] = $rd[4:0];
          $rf_wr_data[31:0] = $result;
          //Branches 1
          $taken_br = $is_beq ? ($src1_value == $src2_value ):
-                     $is_bne ? ($src1_value !== $src2_value ):
-                     $is_blt ? (($src1_value < $src2_value ) ^ ($src1_value[31] !=$src2_value[31])):
-                     $is_bge ? (($src1_value >= $src2_value ) ^ ($src1_value[31] !=$src2_value[31])):
+                     $is_bne ? ($src1_value != $src2_value ):
+                     $is_blt ? (($src1_value < $src2_value ) ^ ($src1_value[31] != $src2_value[31])):
+                     $is_bge ? (($src1_value >= $src2_value ) ^ ($src1_value[31] != $src2_value[31])):
                      $is_bltu ? ($src1_value < $src2_value ):
                      $is_bgeu ? ($src1_value >= $src2_value ):
                      1'b0;
          //Branches 2
-         $br_tgt_pc = $pc + $imm;
+         $br_tgt_pc[31:0] = $pc + $imm;
          //made changes to $pc here
          
          
