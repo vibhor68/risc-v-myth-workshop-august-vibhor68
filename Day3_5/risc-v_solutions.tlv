@@ -69,12 +69,31 @@
                       $is_u_instr ? { {12{$instr[31]}},$instr[19:12],$instr[20],$instr[30:25],$instr[24:21],1'b0}:
                                     32'b0;
          //Instruction Decode
-         $rs1[4:0] = $instr[19:15];
-         $rs2[4:0] = $instr[24:20];
-         $rd[4:0] = $instr[11:7];
-         $opcode[6:0] = $instr[6:0];
-         $func3[2:0] = $instr[14:12];
-         $func7[6:0] = $instr[31:25];
+         //$rs1[4:0] = $instr[19:15];
+         //$rs2[4:0] = $instr[24:20];
+         //$rd[4:0] = $instr[11:7];
+         //$opcode[6:0] = $instr[6:0];
+         //$func3[2:0] = $instr[14:12];
+         //$func7[6:0] = $instr[31:25];
+         
+         //RISC-V Instruction Field Decode
+         $rs1_valid = $is_r_instr || $is_i_instr || $is_s_instr || $is_b_instr;
+         ?$rs1_valid
+            $rs1[4:0] = $instr[19:15];
+         $rs2_valid = $is_r_instr || $is_s_instr || $is_b_instr;
+         ?$rs2_valid
+            $rs2[4:0] = $instr[24:20];
+         $rd_valid = $is_r_instr || $is_i_instr || $is_u_instr || $is_j_instr;
+         ?$rd_valid
+            $rd[4:0] = $instr[11:7];
+         $func3_valid = $is_r_instr || $is_i_instr || $is_s_instr || $is_b_instr;
+         ?$func3_valid
+            $func3[2:0] = $instr[14:12];
+         $func7_valid = $is_r_instr;
+         ?$func7_valid
+            $func7[6:0] = $instr[31:25];
+
+
          // Note: Because of the magic we are using for visualisation, if visualisation is enabled below,
          //       be sure to avoid having unassigned signals (which you might be using for random inputs)
          //       other than those specifically expected in the labs. You'll get strange errors for these.
