@@ -41,7 +41,9 @@
       @0
          //fetch(part1)
          $reset = *reset;
-         $pc[31:0] = >>1$reset ? 0 : (>>1$pc + 32'd4) ;
+         $pc[31:0] = >>1$reset ? 0 :
+                         >>1$taken_br ? >>1$br_tgt_pc: //modified for branch instruction
+                         (>>1$pc + 32'd4) ; 
          
       @1
          //fetch(part2)
@@ -72,7 +74,7 @@
          //$rs1[4:0] = $instr[19:15];
          //$rs2[4:0] = $instr[24:20];
          //$rd[4:0] = $instr[11:7];
-         //$opcode[6:0] = $instr[6:0];
+         $opcode[6:0] = $instr[6:0];
          //$funct3[2:0] = $instr[14:12];
          //$funct7[6:0] = $instr[31:25];
          
@@ -128,7 +130,7 @@
          ?$rd_valid
             $rf_wr_index[4:0] = $rd[4:0];
          $rf_wr_data[31:0] = $result;
-         //Branches
+         //Branches 1
          $taken_br = $is_beq ? ($src1_value == $src2_value ):
                      $is_bne ? ($src1_value !== $src2_value ):
                      $is_blt ? (($src1_value < $src2_value ) ^ ($src1_value[31] !=$src2_value[31])):
@@ -136,15 +138,20 @@
                      $is_bltu ? ($src1_value < $src2_value ):
                      $is_bgeu ? ($src1_value >= $src2_value ):
                      1'b0;
+         //Branches 2
+         $br_tgt_pc = $pc + $imm;
+         //made changes to $pc here
+         
+         
          // Note: Because of the magic we are using for visualisation, if visualisation is enabled below,
          //       be sure to avoid having unassigned signals (which you might be using for random inputs)
          //       other than those specifically expected in the labs. You'll get strange errors for these.
 
    
    // Assert these to end simulation (before Makerchip cycle limit).
-   *passed = *cyc_cnt > 40;
+   //*passed = *cyc_cnt > 40;
    *failed = 1'b0;
-   
+   *passed = |cpu/xreg[10]>>5$value == (1+2+3+4+5+6+7+8+9);
    // Macro instantiations for:
    //  o instruction memory
    //  o register file
@@ -155,7 +162,7 @@
       m4+rf(@1, @1)  // Args: (read stage, write stage) - if equal, no register bypass is required
       //m4+dmem(@4)    // Args: (read/write stage)
    
-   //m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic
+   m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic
                        // @4 would work for all labs
 \SV
    endmodule
