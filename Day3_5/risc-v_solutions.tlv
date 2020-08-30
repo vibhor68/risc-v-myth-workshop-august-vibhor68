@@ -69,12 +69,12 @@
                       $is_u_instr ? { {12{$instr[31]}},$instr[19:12],$instr[20],$instr[30:25],$instr[24:21],1'b0}:
                                     32'b0;
          //Instruction Decode
-         $rs1[4:0] = $instr[19:15];
-         $rs2[4:0] = $instr[24:20];
-         $rd[4:0] = $instr[11:7];
-         $opcode[6:0] = $instr[6:0];
-         $funct3[2:0] = $instr[14:12];
-         $funct7[6:0] = $instr[31:25];
+         //$rs1[4:0] = $instr[19:15];
+         //$rs2[4:0] = $instr[24:20];
+         //$rd[4:0] = $instr[11:7];
+         //$opcode[6:0] = $instr[6:0];
+         //$funct3[2:0] = $instr[14:12];
+         //$funct7[6:0] = $instr[31:25];
          
          //RISC-V Instruction Field Decode
          $rs1_valid = $is_r_instr || $is_i_instr || $is_s_instr || $is_b_instr;
@@ -104,7 +104,22 @@
          $is_addi = $dec_bits ==? 11'bx_000_0010011;
          $is_add = $dec_bits ==? 11'b0_000_0110011;
          
+         
          `BOGUS_USE($is_beq $is_bne $is_blt $is_bge $is_bltu $is_bgeu $is_addi $is_add)
+         
+         //Register File read
+         $rf_rd_en1 = $rs1_valid;
+         $rf_rd_en2 = $rs2_valid;
+         $rf_rd_index1[4:0] = $rs1;
+         $rf_rd_index2[4:0] = $rs2;
+         
+         //Register File read(part2)
+         $src1_value[31:0] = $rf_rd_data1;
+         $src2_value[31:0] = $rf_rd_data1;
+         
+         
+         
+         
          // Note: Because of the magic we are using for visualisation, if visualisation is enabled below,
          //       be sure to avoid having unassigned signals (which you might be using for random inputs)
          //       other than those specifically expected in the labs. You'll get strange errors for these.
@@ -121,10 +136,10 @@
    //  o CPU visualization
    |cpu
       m4+imem(@1)    // Args: (read stage)
-      //m4+rf(@1, @1)  // Args: (read stage, write stage) - if equal, no register bypass is required
+      m4+rf(@1, @1)  // Args: (read stage, write stage) - if equal, no register bypass is required
       //m4+dmem(@4)    // Args: (read/write stage)
    
-   m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic
+   //m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic
                        // @4 would work for all labs
 \SV
    endmodule
