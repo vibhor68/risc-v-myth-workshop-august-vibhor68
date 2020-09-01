@@ -109,7 +109,28 @@
          $is_bgeu = $dec_bits ==? 11'bx_111_1100011;
          $is_addi = $dec_bits ==? 11'bx_000_0010011;
          $is_add = $dec_bits ==? 11'b0_000_0110011;
-         
+         $is_lui = $dec_bits ==? 11'bx_xxx_0110111;
+         $is_auipc = $dec_bits ==? 11'bx_xxx_0010111;
+         $is_jal = $dec_bits ==? 11'bx_xxx_1100111;
+         $is_jalr = $dec_bits ==? 11'bx_000_1100111;
+         $is_sb = $dec_bits ==? 11'bx_000_0100011;
+         $is_sw = $dec_bits ==? 11'bx_010_0100011;
+         $is_slti = $dec_bits ==? 11'bx_010_0010011;
+         $is_sltiu = $dec_bits ==? 11'bx_011_0010011;
+         $is_xori = $dec_bits ==? 11'bx_100_0010011;
+         $is_ori = $dec_bits ==? 11'bx_110_0010011;
+         $is_andi = $dec_bits ==? 11'bx_111_0010011;
+         $is_slli = $dec_bits ==? 11'b0_010_0010011;
+         $is_srli = $dec_bits ==? 11'b0_101_0010011;
+         $is_sub = $dec_bits ==? 11'b1_000_0110011;
+         $is_sll = $dec_bits ==? 11'b0_001_0110011;
+         $is_slt = $dec_bits ==? 11'b0_010_0110011;
+         $is_sltu = $dec_bits ==? 11'b0_011_0110011;
+         $is_xor = $dec_bits ==? 11'b0_100_0110011;
+         $is_srl = $dec_bits ==? 11'b0_101_0110011;
+         $is_sra = $dec_bits ==? 11'b1_101_0110011;
+         $is_and = $dec_bits ==? 11'b0_111_0110011;
+         $is_load = $dec_bits ==? 11'bx_xxx_0000011;
          `BOGUS_USE($is_beq $is_bne $is_blt $is_bge $is_bltu $is_bgeu $is_addi $is_add)
       @2   
          //Register File read
@@ -130,10 +151,32 @@
          $br_tgt_pc[31:0] = $pc + $imm;
       @3   
          //ALU
+         $sltu_rslt = $src1_value < $src2_value;
+         $sltiu_rslt = $src1_value < $imm;
          $result[31:0] =
                $is_addi ? $src1_value + $imm :
                $is_add  ? $src1_value + $src2_value :
-                         32'bx;
+               $is_andi ? $src1_value & $imm :
+               $is_ori ? $src1_value | $imm :
+               $is_slli ? $src1_value << $imm[5:0] :
+               $is_srli ? $src1_value >> $imm[5:0] :
+               $is_and  ? $src1_value & $src2_value :
+               $is_or  ? $src1_value | $src2_value :
+               $is_xor  ? $src1_value ^ $src2_value :
+               $is_sub  ? $src1_value - $src2_value :
+               $is_sll  ? $src1_value << $src2_value[4:0] :
+               $is_srl  ? $src1_value >> $src2_value[4:0] :
+               $is_sltu  ? $src1_value < $src2_value :
+               $is_sltiu  ? $src1_value < $imm :
+               $is_lui  ? {$imm[31:12], 12'b0}:
+               $is_auipc ? $pc + $imm:
+               $is_jal ? $pc + 4:
+               $is_jalr ? $pc + 4:
+               $is_srai ? {{32{$src1_value[31]}},$src1_value} >> $imm[4:0]:
+               $is_slt  ? ($src1_value[31] == $src2_value[31]) ? $sltu_rslt :{31'b0, $src1_value[31]}:
+               $is_slti ? ($src1_value[31] == $imm[31]) ? $sltiu_rslt : {31'b0, $src1_value[31]}:
+               $is_sra  ? {{32{$src1_value[31]}}, $src1_value} >> $src2_value[4:0]:
+                            32'bx;
          
          //Register File Write
          $rf_wr_en = $valid ? (($rd == 5'b0) ? 1'b0 : $rd_valid) : 1'b0;
