@@ -32,8 +32,8 @@
    m4_asm(ADDI, r13, r13, 1)            // Increment intermediate register by 1
    m4_asm(BLT, r13, r12, 1111111111000) // If a3 is less than a2, branch to label named <loop>
    m4_asm(ADD, r10, r14, r0)            // Store final result to register a0 so that it can be read by main program
-   //m4_asm(SW,r0, r10, 100)
-   //m4_asm(LW, r15, r0, 100)
+   //m4_asm(SW,r0, r10, 10000)
+   //m4_asm(LW, r17, r0, 10000)
    // Optional:
    // m4_asm(JAL, r7, 00000000000000000000) // Done. Jump to itself (infinite loop). (Up to 20-bit signed immediate plus implicit 0 bit (unlike JALR) provides byte address; last immediate bit should also be 0)
    m4_define_hier(['M4_IMEM'], M4_NUM_INSTRS)
@@ -49,6 +49,7 @@
          $pc[31:0] = >>1$reset ? 0 :
                          >>3$valid_taken_br ? >>3$br_tgt_pc: //modified for branch instruction
                          >>3$valid_load ? >>3$pc +32'd4: //modified for load 
+                         >>3$valid_jump && >>3$is_jalr ? >>3$jalr_tgt_pc:
                          >>1$pc + 32'd4 ;
          
       @1
@@ -181,13 +182,13 @@
                             32'bx;
          
          //Register File Write
-         //$rf_wr_en = ($rd_valid && $valid && $rd!= 5'b0) || >>2$valid_load;
-         $rf_wr_en = $valid ? (($rd == 5'b0) ? 1'b0 : $rd_valid || $valid_load) : 1'b0;
+         $rf_wr_en = ($rd_valid && $valid && $rd!= 5'b0) || >>2$valid_load;
+         //$rf_wr_en = $valid ? (($rd == 5'b0) ? 1'b0 : $rd_valid || $valid_load) : 1'b0;
          //$rf_wr_en = $valid ? (($rd == 5'b0) ? 1'b0 : $rd_valid) : 1'b0;
          ?$rd_valid
             $rf_wr_index[4:0] = $rd[4:0];
          //$rf_wr_data[31:0] = $result;
-         $rf_wr_data[31:0] = >>2$valid_load ? >>2$ld_data : $result ; //chnaged for load
+         $rf_wr_data[31:0] = >>2$valid_load ? >>2$ld_data : $result ; //changed for load
          //Branches 1
          $taken_br = $is_beq ? ($src1_value == $src2_value ):
                      $is_bne ? ($src1_value != $src2_value ):
@@ -201,14 +202,15 @@
          $valid_taken_br = $valid && $taken_br;
          $valid = !(>>1$valid_taken_br || >>2$valid_taken_br);
          $valid_load = $valid && $is_load;
-         
-         
+         $is_jump = $is_jal || $is_jalr;
+         $jalr_tgt_pc[31:0] = $src1_value + $imm ;
+         $valid_jump = $is_jump && $valid;
       @4  
          //Data Memory
          $dmem_addr[3:0] = $result[5:2];
          $dmem_rd_en = $is_load;
-         //$dmem_wr_en = $is_s_instr && $valid ;
-         $dmem_wr_en = $is_s_instr ? $valid : 0;
+         $dmem_wr_en = $is_s_instr && $valid ;
+         //$dmem_wr_en = $is_s_instr ? $valid : 0;
          $dmem_wr_data[31:0] = $src2_value;
       @5   
          $ld_data[31:0] = $dmem_rd_data;
