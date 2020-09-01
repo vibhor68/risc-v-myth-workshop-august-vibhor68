@@ -47,6 +47,7 @@
          //$inc_pc[31:0] = $pc + 32'd4 ;
          $pc[31:0] = >>1$reset ? 0 :
                          >>3$valid_taken_br ? >>3$br_tgt_pc: //modified for branch instruction
+                         >>3$valid_load ? >>3$pc +32'd4: //modified for load 
                          >>1$pc + 32'd4 ;
          
       @1
@@ -195,7 +196,7 @@
          //$br_tgt_pc[31:0] = $pc + $imm;
          $valid_taken_br = $valid && $taken_br;
          $valid = !(>>1$valid_taken_br || >>2$valid_taken_br);
-         
+         $valid_load = $valid && $is_load;
          
          
          // Note: Because of the magic we are using for visualisation, if visualisation is enabled below,
