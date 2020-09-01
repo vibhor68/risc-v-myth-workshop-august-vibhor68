@@ -32,8 +32,8 @@
    m4_asm(ADDI, r13, r13, 1)            // Increment intermediate register by 1
    m4_asm(BLT, r13, r12, 1111111111000) // If a3 is less than a2, branch to label named <loop>
    m4_asm(ADD, r10, r14, r0)            // Store final result to register a0 so that it can be read by main program
-   //m4_asm(SW,r0, r10, 10000)
-   //m4_asm(LW, r17, r0, 10000)
+   m4_asm(SW,r0, r10, 10000)
+   m4_asm(LW, r17, r0, 10000)
    // Optional:
    // m4_asm(JAL, r7, 00000000000000000000) // Done. Jump to itself (infinite loop). (Up to 20-bit signed immediate plus implicit 0 bit (unlike JALR) provides byte address; last immediate bit should also be 0)
    m4_define_hier(['M4_IMEM'], M4_NUM_INSTRS)
@@ -145,10 +145,10 @@
          //Register File read(part2)
          //$src1_value[31:0] = $rf_rd_data1;
          //$src2_value[31:0] = $rf_rd_data2;
-         $src1_value[31:0] = ((>>1$rf_wr_index == $rf_rd_index1) && >>1$rf_wr_en)
+         $src1_value[31:0] = ((>>1$rd == $rs1) && >>1$rf_wr_en)
                              ? >>1$result :
                              $rf_rd_data1 ;
-         $src2_value[31:0] = ((>>1$rf_wr_index == $rf_rd_index2) && >>1$rf_wr_en)
+         $src2_value[31:0] = ((>>1$rd == $rs2) && >>1$rf_wr_en)
                               ? >>1$result :
                               $rf_rd_data2 ;
          $br_tgt_pc[31:0] = $pc + $imm;
@@ -179,14 +179,16 @@
                $is_slt  ? ($src1_value[31] == $src2_value[31]) ? $sltu_rslt :{31'b0, $src1_value[31]}:
                $is_slti ? ($src1_value[31] == $imm[31]) ? $sltiu_rslt : {31'b0, $src1_value[31]}:
                $is_sra  ? {{32{$src1_value[31]}}, $src1_value} >> $src2_value[4:0]:
-                            32'bx;
-         
+               $is_load ? $src1_value + $imm :
+               $is_s_instr ? $src1_value + $imm :
+               32'bx;
          //Register File Write
-         $rf_wr_en = ($rd_valid && $valid && $rd!= 5'b0) || >>2$valid_load;
+         
+         $rf_wr_en = ($rd_valid && $valid && $rd!= 5'b0 && !$valid_load) || >>2$valid_load;
          //$rf_wr_en = $valid ? (($rd == 5'b0) ? 1'b0 : $rd_valid || $valid_load) : 1'b0;
          //$rf_wr_en = $valid ? (($rd == 5'b0) ? 1'b0 : $rd_valid) : 1'b0;
-         ?$rd_valid
-            $rf_wr_index[4:0] = $rd[4:0];
+         ?$rf_wr_en
+            $rf_wr_index[4:0] = >>2$valid_load ? >>2$rd[4:0] : $rd[4:0];
          //$rf_wr_data[31:0] = $result;
          $rf_wr_data[31:0] = >>2$valid_load ? >>2$ld_data : $result ; //changed for load
          //Branches 1
@@ -200,7 +202,7 @@
          //Branches 2
          //$br_tgt_pc[31:0] = $pc + $imm;
          $valid_taken_br = $valid && $taken_br;
-         $valid = !(>>1$valid_taken_br || >>2$valid_taken_br);
+         $valid = !(>>1$valid_taken_br || >>2$valid_taken_br ||>>1$valid_load || >>2$valid_load || >>1$valid_jump || >>2$valid_jump);
          $valid_load = $valid && $is_load;
          $is_jump = $is_jal || $is_jalr;
          $jalr_tgt_pc[31:0] = $src1_value + $imm ;
@@ -208,7 +210,7 @@
       @4  
          //Data Memory
          $dmem_addr[3:0] = $result[5:2];
-         $dmem_rd_en = $is_load;
+         $dmem_rd_en = $valid_load;
          $dmem_wr_en = $is_s_instr && $valid ;
          //$dmem_wr_en = $is_s_instr ? $valid : 0;
          $dmem_wr_data[31:0] = $src2_value;
@@ -223,7 +225,7 @@
    // Assert these to end simulation (before Makerchip cycle limit).
    //*passed = *cyc_cnt > 40;
    *failed = 1'b0;
-   *passed = |cpu/xreg[10]>>5$value == (1+2+3+4+5+6+7+8+9);
+   *passed = |cpu/xreg[17]>>5$value == (1+2+3+4+5+6+7+8+9);
    // Macro instantiations for:
    //  o instruction memory
    //  o register file
@@ -234,7 +236,7 @@
       m4+rf(@2, @3)  // Args: (read stage, write stage) - if equal, no register bypass is required
       m4+dmem(@4)    // Args: (read/write stage)
    
-   m4+cpu_viz(@5)    // For visualisation, argument should be at least equal to the last stage of CPU logic
+   m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic
                        // @4 would work for all labs
 \SV
    endmodule
