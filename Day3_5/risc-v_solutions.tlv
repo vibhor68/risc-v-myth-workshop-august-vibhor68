@@ -180,10 +180,13 @@
                             32'bx;
          
          //Register File Write
-         $rf_wr_en = $valid ? (($rd == 5'b0) ? 1'b0 : $rd_valid) : 1'b0;
+         //$rf_wr_en = ($rd_valid && $valid && $rd!= 5'b0) || >>2$valid_load;
+         $rf_wr_en = $valid ? (($rd == 5'b0) ? 1'b0 : $rd_valid || $valid_load) : 1'b0;
+         //$rf_wr_en = $valid ? (($rd == 5'b0) ? 1'b0 : $rd_valid) : 1'b0;
          ?$rd_valid
             $rf_wr_index[4:0] = $rd[4:0];
-         $rf_wr_data[31:0] = $result;
+         //$rf_wr_data[31:0] = $result;
+         $rf_wr_data[31:0] = >>2$valid_load ? >>2$ld_data : $result ; //chnaged for load
          //Branches 1
          $taken_br = $is_beq ? ($src1_value == $src2_value ):
                      $is_bne ? ($src1_value != $src2_value ):
