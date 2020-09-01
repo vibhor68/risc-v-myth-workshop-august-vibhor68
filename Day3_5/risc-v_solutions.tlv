@@ -41,12 +41,13 @@
       @0
          //fetch(part1)
          $reset = *reset;
-         $start = (>>1$reset&&!$reset) ? 1'b1 : 1'b0;
-         $valid = $reset ? 1'b0 :
-                  $start ? 1'b1 : >>3$valid;
+         //$start = (>>1$reset&&!$reset) ? 1'b1 : 1'b0;
+         //$valid = $reset ? 1'b0 :
+         //         $start ? 1'b1 : >>3$valid;
+         //$inc_pc[31:0] = $pc + 32'd4 ;
          $pc[31:0] = >>1$reset ? 0 :
                          >>3$valid_taken_br ? >>3$br_tgt_pc: //modified for branch instruction
-                         (>>3$pc + 32'd4) ; 
+                         >>1$pc + 32'd4 ;
          
       @1
          //fetch(part2)
@@ -120,12 +121,12 @@
          //Register File read(part2)
          //$src1_value[31:0] = $rf_rd_data1;
          //$src2_value[31:0] = $rf_rd_data2;
-         $src1_value[31:0] = (>>1$rd == >>1$rs1) && >>1$rf_wr_en
-                             ? >>1$result:
-                             $rf_rd_data1;
-         $src2_value[31:0] = (>>1$rd == >>1$rs2) && >>1$rf_wr_en
-                              ? >>1$result:
-                              $rf_rd_data2;
+         $src1_value[31:0] = ((>>1$rf_wr_index == $rf_rd_index1) && >>1$rf_wr_en)
+                             ? >>1$result :
+                             $rf_rd_data1 ;
+         $src2_value[31:0] = ((>>1$rf_wr_index == $rf_rd_index2) && >>1$rf_wr_en)
+                              ? >>1$result :
+                              $rf_rd_data2 ;
          $br_tgt_pc[31:0] = $pc + $imm;
       @3   
          //ALU
@@ -150,13 +151,10 @@
          //Branches 2
          //$br_tgt_pc[31:0] = $pc + $imm;
          $valid_taken_br = $valid && $taken_br;
-         //made changes to $pc here
+         $valid = !(>>1$valid_taken_br || >>2$valid_taken_br);
          
-         //Day5
-         //lab3 cycle $valid
-      
          
-            
+         
          // Note: Because of the magic we are using for visualisation, if visualisation is enabled below,
          //       be sure to avoid having unassigned signals (which you might be using for random inputs)
          //       other than those specifically expected in the labs. You'll get strange errors for these.
