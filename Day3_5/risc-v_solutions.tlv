@@ -118,9 +118,14 @@
          $rf_rd_index2[4:0] = $rs2;
          
          //Register File read(part2)
-         $src1_value[31:0] = $rf_rd_data1;
-         $src2_value[31:0] = $rf_rd_data2;
-         
+         //$src1_value[31:0] = $rf_rd_data1;
+         //$src2_value[31:0] = $rf_rd_data2;
+         $src1_value[31:0] = (>>1$rd == >>1$rs1) && >>1$rf_wr_en
+                             ? >>1$result:
+                             $rf_rd_data1;
+         $src2_value[31:0] = (>>1$rd == >>1$rs2) && >>1$rf_wr_en
+                              ? >>1$result:
+                              $rf_rd_data2;
          $br_tgt_pc[31:0] = $pc + $imm;
       @3   
          //ALU
